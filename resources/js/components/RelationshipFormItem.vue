@@ -16,7 +16,7 @@
             </div>
 
             <div class="w-5/8 flex-grow text-left py-2 px-2">
-                <h4 class="font-normal text-80" v-text="label"></h4>
+                <h4 class="font-normal text-80" v-text="computedlabel"></h4>
             </div>
 
             <div v-if="field.deletable" class="w-1/4 text-right">
@@ -90,7 +90,7 @@
                 )
             },
 
-            label() {
+            computedlabel() {
                 return this.field.singular
                     ? this.field.singularLabel
                     : `${this.field.singularLabel} ${this.id + 1}`;
