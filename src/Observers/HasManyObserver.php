@@ -2,6 +2,8 @@
 
 namespace KirschbaumDevelopment\NovaInlineRelationship\Observers;
 
+use App\Models\UserDocument;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,6 +22,11 @@ class HasManyObserver extends BaseObserver
 
         for ($i = 0; $i < count($value); $i++) {
             $childModel = $model->{$attribute}()->find($value[$i]['modelId']);
+
+            if (array_key_exists('document', $value[$i]['fields'])  && $value[$i]['fields']['document'] instanceof UploadedFile) {
+                $path = $value[$i]['fields']['document']->store(UserDocument::DOCUMENT_PATH, ['disk' => 'public']);
+                $value[$i]['fields']['document'] = $path;
+            }
 
             if (empty($childModel)) {
                 $model->{$attribute}()->create($value[$i]['fields']);
