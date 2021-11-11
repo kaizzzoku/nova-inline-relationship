@@ -2,6 +2,8 @@
 
 namespace KirschbaumDevelopment\NovaInlineRelationship;
 
+use App\Models\Userdata;
+use App\Models\UserDocument;
 use stdClass;
 use Carbon\Carbon;
 use App\Nova\Resource;
@@ -554,13 +556,21 @@ class NovaInlineRelationship extends Field
      */
     protected function setModelAttributeValue(Model $model, $attribute, array $value): void
     {
-        $modelClass = get_class($model);
+        if ($model instanceof Userdata && $attribute == 'documents') {
+            $model->$attribute()->delete();
+            $children = collect($value)->pluck('fields');
 
-        if (! array_key_exists($modelClass, static::$observedModels)) {
-            $model::observe(NovaInlineRelationshipObserver::class);
-            $model->updated_at = Carbon::now();
+            $children = $children->map(function ($child) {
+                foreach ($child as $attrKey => $attrValue) {
+                    if ($attrValue instanceof UploadedFile) {
+                        return ['document' => $attrValue->store(UserDocument::DOCUMENT_PATH)];
+                    }
+                }
+                return $child;
+            });
+
+            $model->$attribute()->createMany($children);
         }
 
-        static::$observedModels[$modelClass][$attribute] = $this->isNullValue($value) ? null : $value;
     }
 }
